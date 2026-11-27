@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://script.google.com https://script.googleusercontent.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; img-src 'self' data: https://*.googleusercontent.com; media-src 'self'">
+<title>Catatanku</title>
+<meta name="theme-color" content="#13294B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Catatanku">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="icon" href="./icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./stylesheet.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="login" class="layar" hidden>
+  <video class="vid" src="./img/login.mp4" poster="./img/login.jpg" autoplay muted loop playsinline preload="auto"></video>
+  <div class="lgGrad"></div>
+  <h1 class="lgJudul">Catatanku</h1>
+  <div class="lgKotak">
+    <div id="gBtn" class="gBtn"></div>
+    <p id="lgPesan" class="lgPesan" role="alert"></p>
+  </div>
+</section>
+
+<!-- APLIKASI -->
+<div id="app" hidden>
+  <header class="top">
+    <button id="avatar" class="avatar" aria-label="Keluar"><img src="./img/profil.png" alt=""></button>
+    <b class="judul" id="judul">Catatanku</b>
+    <button id="lencana" class="lencana" hidden aria-label="Antrean simpan"><span class="setir"></span><span id="lencanaN">0</span></button>
+    <button id="btnSet" class="ikonBtn" aria-label="Pengaturan"><img src="./img/gear.png" alt=""></button>
+  </header>
+
+  <main>
+    <section id="s-home" class="sc">
+      <div class="hero"><video class="vid" src="./img/login.mp4" poster="./img/login.jpg" autoplay muted loop playsinline preload="metadata"></video><div class="sapa" id="sapa">Selamat Datang</div></div>
+      <h2 class="sec">Laporan Kapten Hari Ini</h2>
+      <div class="card" id="laporan"></div>
+      <h2 class="sec">Stok Kresek</h2>
+      <div class="g3" id="stokHome"></div>
+      <h2 class="sec">Catatan Terakhir</h2>
+      <div class="card" id="terakhir"></div>
+    </section>
+
+    <section id="s-kresek" class="sc" hidden>
+      <div class="g3" id="stokKresek"></div>
+      <div class="card mt">
+        <div class="big2" id="krArah">
+          <button data-v="masuk"><img src="./img/masuk.png" alt="">Stok Masuk</button>
+          <button data-v="jual" class="on"><img src="./img/jual.png" alt="">Jual Ke Toko</button>
+        </div>
+        <div id="krTokoBox"><div class="lb">Toko</div><div class="chips" id="krToko"></div></div>
+        <div class="lb">Ukuran</div>
+        <div class="chips" id="krUkuran"><button data-v="kecil">Kecil</button><button data-v="sedang">Sedang</button><button data-v="besar">Besar</button></div>
+        <div class="lb">Jumlah Pak</div>
+        <div class="qty"><button id="qMin" aria-label="Kurangi">−</button><input id="qty" inputmode="numeric" value="1" aria-label="Jumlah pak"><button id="qPlus" aria-label="Tambah">+</button></div>
+        <button class="btn" id="krSimpan">Simpan</button>
+      </div>
+      <div class="riw" data-jenis="kresek"></div>
+    </section>
+
+    <section id="s-peng" class="sc" hidden>
+      <div class="card">
+        <div class="lb">Toko</div><div class="chips" id="pgToko"></div>
+        <div class="lb">Jenis</div><div class="chips" id="pgJenis"></div>
+        <div class="lb">Nominal</div>
+        <div class="rpBox"><input class="rp" id="pgNom" inputmode="numeric" placeholder="Ketik Nominal" aria-label="Nominal"><button class="k000" aria-label="Tambah tiga nol">000</button></div>
+        <div class="lb">Status</div>
+        <div class="chips" id="pgStatus"><button data-v="lunas" class="on">Lunas</button><button data-v="belum">Belum Lunas</button></div>
+        <div class="lb">Keterangan (Boleh Kosong)</div>
+        <input id="pgKet" maxlength="120" placeholder="Uang Penitipan">
+        <button class="btn" id="pgSimpan">Simpan</button>
+      </div>
+      <div class="seg s3" id="pgTab"><button data-v="belum" class="on">Belum Lunas (<span id="nBelum">0</span>)</button><button data-v="lunas">Lunas</button><button data-v="semua">Semua</button></div>
+      <div id="pgBelum"></div>
+      <div class="riw" data-jenis="pengeluaran" hidden></div>
+    </section>
+
+    <section id="s-prib" class="sc" hidden>
+      <div class="seg s2" id="prSub"><button data-v="CV" class="on">CV</button><button data-v="OP">OP</button></div>
+      <div class="tot"><span>Total <span id="prNama">CV</span><br><span id="prBln"></span></span><b id="prTot">Rp 0</b></div>
+      <div class="card">
+        <div class="lb">Deskripsi</div><input id="prDesk" maxlength="60" placeholder="ATK CURUG">
+        <div class="lb">Nominal</div>
+        <div class="rpBox"><input class="rp" id="prNom" inputmode="numeric" placeholder="Ketik Nominal" aria-label="Nominal"><button class="k000" aria-label="Tambah tiga nol">000</button></div>
+        <button class="btn" id="prSimpan">Simpan Ke CV</button>
+      </div>
+      <div class="riw" data-jenis="pribadi"></div>
+    </section>
+
+    <section id="s-set" class="sc" hidden>
+      <div class="card">
+        <h3 class="sub">Minimal Stok Kresek (Pak)</h3>
+        <div class="minRow"><label>Kecil<input class="angka" id="minK" inputmode="numeric"></label><label>Sedang<input class="angka" id="minS" inputmode="numeric"></label><label>Besar<input class="angka" id="minB" inputmode="numeric"></label></div>
+        <button class="btn" id="minSimpan">Simpan Minimal Stok</button>
+      </div>
+      <div class="card"><h3 class="sub">Daftar Toko</h3><div class="chips" id="setToko"></div></div>
+      <div class="card"><h3 class="sub">Daftar Jenis Pengeluaran</h3><div class="chips" id="setJenis"></div></div>
+      <div class="card menu">
+        <button data-go="log"><img src="./img/struk.png" alt="">Log Aktivitas<span>›</span></button>
+        <button data-go="arsip"><img src="./img/chest.png" alt="">Riwayat Arsip<span>›</span></button>
+        <button data-go="antrean"><img src="./img/plus.png" alt="">Antrean Simpan<span>›</span></button>
+        <button id="btnIos"><img src="./img/app.png" alt="">Cara Pasang Di iPhone<span>›</span></button>
+      </div>
+      <p class="versi" id="versi"></p>
+    </section>
+
+    <section id="s-log" class="sc" hidden>
+      <div class="g3" id="logSum"></div>
+      <p class="info" id="logLambat"></p>
+      <div class="seg s3" id="logTab"><button data-v="semua" class="on">Semua</button><button data-v="lambat">Lambat</button><button data-v="gagal">Gagal</button></div>
+      <div class="card" id="logList"></div>
+      <button class="btn alt" id="logSalin">Salin Log Untuk Dikirim Ke Claude</button>
+    </section>
+
+    <section id="s-arsip" class="sc" hidden>
+      <div class="card" id="arsipList"></div>
+      <div class="card"><b>Arsip Otomatis Tiap Tanggal 1</b><p class="info">Sheet Utama Menyimpan 3 Bulan Terakhir. Kasbon Belum Lunas Ditahan Sampai Lunas.</p><button class="btn" id="arsipNow">Arsip Sekarang</button></div>
+    </section>
+
+    <section id="s-antrean" class="sc" hidden>
+      <div class="card" id="qList"></div>
+      <button class="btn" id="qUlang">Kirim Ulang Semua</button>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <button data-go="home" class="on"><img src="./img/home.png" alt="">Beranda</button>
+    <button data-go="kresek"><img src="./img/kresek.png" alt="">Kresek</button>
+    <button class="plus" id="btnPlus" aria-label="Catat"><img src="./img/plus.png" alt=""></button>
+    <button data-go="peng"><img src="./img/struk.png" alt="">Pengeluaran</button>
+    <button data-go="prib"><img src="./img/buku.png" alt="">Pribadi</button>
+  </nav>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheetIsi">
+      <b>Mau Catat Apa, Kapten?</b>
+      <div class="g3"><button data-go="kresek"><img src="./img/kresek.png" alt="">Kresek</button><button data-go="peng"><img src="./img/struk.png" alt="">Pengeluaran</button><button data-go="prib"><img src="./img/buku.png" alt="">Pribadi</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- kartu keterangan aksi -->
+<div id="kartu" class="kartu" hidden role="status" aria-live="polite"><img id="kartuImg" src="./img/happy.png" alt=""><span id="kartuT"></span><i id="kartuIk"></i></div>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <b id="dlgJ"></b><p id="dlgP"></p>
+    <input id="dlgIn" hidden maxlength="30">
+    <div class="dlgBtn"><button value="0" class="btn alt">Batal</button><button value="1" class="btn" id="dlgOk">Ya</button></div>
+  </form>
+</dialog>
+
+<script src="./javascript.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+</body>
+</html>
