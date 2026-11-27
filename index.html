@@ -54,6 +54,7 @@
     <section id="s-kresek" class="sc" hidden><div class="kol2"><div>
       <div class="g3" id="stokKresek"></div>
       <div class="card mt">
+        <div class="lb">Tanggal</div><input type="date" class="tgl" id="krTgl" aria-label="Tanggal">
         <div class="big2" id="krArah">
           <button data-v="masuk"><img src="./img/masuk.png" alt="">Stok Masuk</button>
           <button data-v="jual" class="on"><img src="./img/jual.png" alt="">Jual Ke Toko</button>
@@ -70,6 +71,7 @@
 
     <section id="s-peng" class="sc" hidden><div class="kol2">
       <div class="card">
+        <div class="lb">Tanggal</div><input type="date" class="tgl" id="pgTgl" aria-label="Tanggal">
         <div class="lb">Toko</div><div class="chips" id="pgToko"></div>
         <div class="lb">Jenis</div><div class="chips" id="pgJenis"></div>
         <div class="lb">Nominal</div>
@@ -87,6 +89,7 @@
       <div class="seg s2 mt0" id="prSub"><button data-v="CV" class="on">CV</button><button data-v="OP">OP</button></div>
       <div class="tot"><span>Total <span id="prNama">CV</span><br><span id="prBln"></span></span><b id="prTot">Rp 0</b></div>
       <div class="card">
+        <div class="lb">Tanggal</div><input type="date" class="tgl" id="prTgl" aria-label="Tanggal">
         <div class="lb">Deskripsi</div><input id="prDesk" maxlength="60" placeholder="ATK CURUG">
         <div class="lb">Nominal</div>
         <div class="rpBox"><input class="rp" id="prNom" inputmode="numeric" placeholder="Ketik Nominal" aria-label="Nominal"><button class="k000" aria-label="Tambah tiga nol">000</button></div>
@@ -149,6 +152,8 @@
 
 <!-- kartu keterangan aksi -->
 <div id="kartu" class="kartu" hidden role="status" aria-live="polite"><img id="kartuImg" src="./img/happy.png" alt=""><span id="kartuT"></span><i id="kartuIk"></i></div>
+
+<dialog id="dlgEdit"><form method="dialog" id="edForm"></form></dialog>
 
 <dialog id="dlg">
   <form method="dialog">

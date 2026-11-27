@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.3'
+  VERSI: '1.5'
 };
 // ===============================================================
 
@@ -131,7 +131,7 @@ function terimaRing(r) {
   const a = r.arsip;
   if (a && a.id && LS.get('arsipLihat', '') !== a.id) { LS.set('arsipLihat', a.id); kartuSelesai(true, 'Arsip ' + a.tgl + ': Data Sampai ' + a.sampai + ' Dipindah Ke Arsip', 6000); }
 }
-async function muatRing() { const r = await api('ringkasan', {}, 'Muat Ringkasan'); if (r.ok) terimaRing(r.data); }
+async function muatRing() { const r = await api('ringkasan', {}, 'Segarkan Ringkasan'); if (r.ok) terimaRing(r.data); }
 function efektif() {
   const r = JSON.parse(JSON.stringify(S.ring || {stok: {}, min: {}, kasbon: [], terakhir: []}));
   for (const it of S.q) {
@@ -139,6 +139,10 @@ function efektif() {
     if (it.st === 'gagal' && !it.net) continue;
     if (it.aksi === 'simpan' && d.jenis === 'kresek') r.stok[d.ukuran] = (r.stok[d.ukuran] || 0) + (d.arah === 'masuk' ? d.pak : -d.pak);
     if (it.aksi === 'simpan' && d.jenis === 'pengeluaran' && d.status === 'belum') r.kasbon.unshift({id: it.id, waktu: it.t, toko: d.toko, desk: d.desk, nominal: d.nominal, sisa: d.nominal, ket: d.ket, pend: 1});
+    if (it.aksi === 'ubah') {
+      if (d.jenis === 'kresek' && d.pak) r.stok[d.ukuran] = (r.stok[d.ukuran] || 0) + (d.arah === 'masuk' ? 1 : -1) * (d.pak - d.pakLama);
+      if (d.jenis === 'pengeluaran') { const k = r.kasbon.find(x => x.id === d.id); if (k) { const bayar = k.nominal - k.sisa; Object.assign(k, {toko: d.toko, desk: d.desk, ket: d.ket, nominal: d.nominal, sisa: d.nominal - bayar, pend: 1}, d.tgl ? {waktu: d.tgl + 'T05:00:00Z'} : {}); } }
+    }
     if (it.aksi === 'batal') {
       if (d.jenis === 'kresek') r.stok[d.ukuran] = (r.stok[d.ukuran] || 0) + (d.arah === 'masuk' ? -d.pak : d.pak);
       if (d.jenis === 'pengeluaran') r.kasbon = r.kasbon.filter(x => x.id !== d.id);
@@ -182,7 +186,8 @@ function barisData(o, status, bisaBatal) {
   const batal = o.status === 'batal';
   const isiBaris = [img(ik), h('div', {cls: 't'}, judul, h('small', {cls: status ? 'pend' : ''}, (batal ? 'Dibatalkan · ' : '') + (status ? status + ' · ' : '') + wkt(o.waktu) + (o.ket ? ' · ' + o.ket : ''))), h('span', {cls: 'v'}, nilai)];
   if (!bisaBatal || batal || status) return h('div', {cls: 'row' + (batal ? ' batal' : '')}, isiBaris);
-  return h('button', {cls: 'row', 'aria-label': 'Batalkan ' + judul, onclick: () => mintaBatal(o, judul + ' ' + nilai)}, isiBaris);
+  if (o.jenis === 'bayar') return h('button', {cls: 'row', 'aria-label': 'Batalkan ' + judul, onclick: () => mintaBatal(o, judul + ' ' + nilai)}, isiBaris);
+  return h('button', {cls: 'row', 'aria-label': 'Edit ' + judul, onclick: () => bukaEdit(o)}, isiBaris, h('span', {cls: 'pen kecil', 'aria-hidden': 'true'}, '✎'));
 }
 async function mintaBatal(o, teks) {
   if (!await tanya('Batalkan Catatan Ini?', teks + ' (' + wkt(o.waktu) + '). Angkanya akan dibalik, catatan tetap tersimpan sebagai "Dibatalkan".', {ok: 'Batalkan'})) return;
@@ -203,7 +208,7 @@ function kartuKasbon(k) {
     kartuSelesai(true, 'Tersimpan Di HP, Sisa Jadi ' + rp(k.sisa - j));
   }}, 'Simpan Pembayaran');
   box.append(h('div', {cls: 'rpBox'}, inp, tombol000(inp)), sb); pasangRp(inp);
-  return h('div', {cls: 'card k'},
+  return h('div', {cls: 'card k adaPen'}, k.pend ? null : pensil(Object.assign({jenis: 'pengeluaran', status: 'belum'}, k)),
     h('div', {cls: 'h'}, h('span', {}, k.toko + ' · ' + k.desk), h('span', {}, ang(k.nominal))),
     h('div', {cls: 's'}, wkt(k.waktu) + ' · ' + (sudah ? 'Sudah Bayar ' + ang(sudah) + ' · ' : 'Belum Bayar · ') + 'Sisa ' + ang(k.sisa) + (k.pend ? ' · Menunggu Kirim' : '') + (k.ket ? ' · ' + k.ket : '')),
     h('div', {cls: 'bar'}, h('i', {style: 'width:' + Math.round(sudah / k.nominal * 100) + '%'})),
@@ -214,9 +219,68 @@ function kartuKasbon(k) {
 
 function kartuLunas(x) {
   const tgl = t => new Date(t).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
-  return h('div', {cls: 'card k lunasK'},
+  return h('div', {cls: 'card k lunasK adaPen'}, pensil(x),
     h('div', {cls: 'h'}, h('span', {}, x.toko + ' · ' + x.desk), h('span', {}, ang(x.nominal))), h('div', {cls: 'stamp'}, 'LUNAS'),
     h('div', {cls: 's'}, 'Dicatat ' + tgl(x.waktu) + (x.lunas ? ' · Lunas ' + tgl(x.lunas) : '') + (x.ket ? ' · ' + x.ket : '')));
+}
+
+// ---------- tanggal: otomatis hari ini, boleh mundur sampai awal bulan ke-2 sebelumnya ----------
+const hariIni = () => new Date().toLocaleDateString('sv-SE', {timeZone: 'Asia/Jakarta'});
+const tglMin = () => { const [y, m] = hariIni().split('-').map(Number), d = new Date(y, m - 3, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; };
+const keTgl = t => new Date(t).toLocaleDateString('sv-SE', {timeZone: 'Asia/Jakarta'});
+function aturTgl(el, nilai) { el.max = hariIni(); el.min = tglMin(); el.value = nilai || hariIni(); }
+const ambilTgl = el => (!el.value || el.value === hariIni()) ? '' : el.value;
+function cekTgl(el) { const v = el.value || hariIni(); if (v > hariIni()) return 'Tanggal Tidak Boleh Di Masa Depan'; if (v < tglMin()) return 'Tanggal Terlalu Lama (Sudah Diarsip)'; return ''; }
+$$('.tgl').forEach(el => aturTgl(el));
+
+// ---------- edit + batalkan lewat pensil (sama untuk Kresek, Pengeluaran, Pribadi) ----------
+const pensil = o => h('button', {cls: 'pen', type: 'button', 'aria-label': 'Edit', onclick: e => { e.stopPropagation(); bukaEdit(o); }}, '✎');
+function bukaEdit(o) {
+  const d = $('#dlgEdit'), f = $('#edForm'), tgl = h('input', {type: 'date', 'aria-label': 'Tanggal'}); aturTgl(tgl, keTgl(o.waktu));
+  const pilihan = (list, nilai) => h('select', {}, [...new Set([nilai, ...list].filter(Boolean))].map(x => h('option', {value: x, selected: x === nilai ? '' : null}, x)));
+  const terbayar = o.jenis === 'pengeluaran' && (o.status === 'lunas' || (o.sisa !== '' && o.sisa != null && Number(o.sisa) !== Number(o.nominal)));
+  const isian = {}, el = [h('b', {cls: 'edJ'}, 'Edit Catatan'), h('div', {cls: 'lb'}, 'Tanggal'), tgl];
+  if (o.jenis === 'kresek') {
+    el.push(h('p', {cls: 'info'}, (o.arah === 'masuk' ? 'Stok Masuk' : 'Jual Ke Toko') + ' · Kresek ' + o.ukuran));
+    if (o.arah === 'jual') { isian.toko = pilihan(S.master.toko, o.toko); el.push(h('div', {cls: 'lb'}, 'Toko'), isian.toko); }
+    isian.pak = h('input', {inputmode: 'numeric', value: o.pak, 'aria-label': 'Jumlah pak'}); el.push(h('div', {cls: 'lb'}, 'Jumlah Pak'), isian.pak);
+  } else if (o.jenis === 'pengeluaran') {
+    isian.toko = pilihan(S.master.toko, o.toko); isian.desk = pilihan(S.master.jenis, o.desk);
+    isian.nominal = h('input', {cls: 'rp', inputmode: 'numeric', value: ang(o.nominal), disabled: terbayar ? '' : null, 'aria-label': 'Nominal'});
+    isian.ket = h('input', {maxlength: 120, value: o.ket || '', placeholder: 'Uang Penitipan', 'aria-label': 'Keterangan'});
+    el.push(h('div', {cls: 'lb'}, 'Toko'), isian.toko, h('div', {cls: 'lb'}, 'Jenis'), isian.desk, h('div', {cls: 'lb'}, 'Nominal'), isian.nominal);
+    if (terbayar) el.push(h('p', {cls: 'info'}, 'Nominal Terkunci Karena Sudah Ada Pembayaran'));
+    el.push(h('div', {cls: 'lb'}, 'Keterangan'), isian.ket);
+  } else {
+    isian.sub = pilihan(['CV', 'OP'], o.sub); isian.desk = h('input', {maxlength: 60, value: o.desk, 'aria-label': 'Deskripsi'});
+    isian.nominal = h('input', {cls: 'rp', inputmode: 'numeric', value: ang(o.nominal), 'aria-label': 'Nominal'});
+    el.push(h('div', {cls: 'lb'}, 'CV / OP'), isian.sub, h('div', {cls: 'lb'}, 'Deskripsi'), isian.desk, h('div', {cls: 'lb'}, 'Nominal'), isian.nominal);
+  }
+  if (isian.nominal) pasangRp(isian.nominal);
+  if (isian.pak) { isian.pak.addEventListener('focus', () => isian.pak.select()); isian.pak.addEventListener('input', () => { isian.pak.value = isian.pak.value.replace(/\D/g, '').slice(0, 5); }); }
+  const pesan = h('p', {cls: 'lgPesan', role: 'alert'});
+  const simpan = h('button', {cls: 'btn', type: 'button', onclick: () => {
+    const v = {tgl: tgl.value === keTgl(o.waktu) ? '' : tgl.value}, salahTgl = cekTgl(tgl);
+    if (salahTgl) return pesan.textContent = salahTgl;
+    if (isian.toko) v.toko = isian.toko.value;
+    if (isian.desk) v.desk = (isian.desk.value || '').trim();
+    if (isian.ket) v.ket = isian.ket.value.trim().slice(0, 120);
+    if (isian.sub) v.sub = isian.sub.value;
+    if (isian.nominal) v.nominal = terbayar ? Number(o.nominal) : nilaiRp(isian.nominal);
+    if (isian.pak) v.pak = Number(isian.pak.value) || 0;
+    if (isian.desk && !v.desk) return pesan.textContent = 'Isian Tidak Boleh Kosong';
+    if ('nominal' in v && !v.nominal) return pesan.textContent = 'Nominal Tidak Boleh Kosong';
+    if ('pak' in v && v.pak < 1) return pesan.textContent = 'Jumlah Pak Minimal 1';
+    d.close();
+    const ym = keTgl(o.waktu).slice(0, 7);
+    antre('ubah', Object.assign({id: o.id, bulan: ym, jenis: o.jenis, arah: o.arah, ukuran: o.ukuran, pakLama: Number(o.pak) || 0}, v), 'Edit ' + (o.toko || o.desk || o.jenis));
+    Object.values(S.riw).forEach(c => c.rows.forEach(x => { if (x.id === o.id) Object.assign(x, v, v.tgl ? {waktu: v.tgl + 'T05:00:00Z'} : {}); }));
+    kartuSelesai(true, 'Perubahan Tersimpan Di HP, Sedang Dikirim'); tampil();
+    if (['kresek', 'peng', 'prib'].includes(S.layar)) muatRiwayat($('#s-' + S.layar + ' .riw'));
+  }}, 'Simpan Perubahan');
+  const batal = h('button', {cls: 'btn hapus', type: 'button', onclick: () => { d.close(); mintaBatal(o, (o.toko || o.desk || '') + ' ' + (o.jenis === 'kresek' ? ang(o.pak) + ' Pak' : rp(o.nominal))); }}, 'Batalkan Catatan Ini');
+  isi(f, el, pesan, h('div', {cls: 'dlgBtn'}, h('button', {cls: 'btn alt', value: '0'}, 'Tutup'), simpan), batal);
+  d.showModal();
 }
 
 // ---------- isian rupiah: kosong saat diketuk, titik ribuan otomatis ----------
@@ -267,11 +331,12 @@ sekali($('#krSimpan'), () => {
   if (!ukuran) return kartuSelesai(false, 'Pilih Ukuran Dulu');
   if (arah === 'jual' && !toko) return kartuSelesai(false, 'Pilih Toko Dulu');
   if (pak < 1) return kartuSelesai(false, 'Jumlah Pak Minimal 1');
+  if (cekTgl($('#krTgl'))) return kartuSelesai(false, cekTgl($('#krTgl')));
   const stok = efektif().stok[ukuran] || 0;
   if (arah === 'jual' && pak > stok) return kartuSelesai(false, 'Stok Kresek ' + ukuran + ' Tinggal ' + stok + ' Pak');
-  antre('simpan', {jenis: 'kresek', arah, ukuran, pak, toko: arah === 'jual' ? toko : ''}, (arah === 'masuk' ? 'Stok Masuk ' : 'Jual ') + ukuran);
+  antre('simpan', {jenis: 'kresek', arah, ukuran, pak, toko: arah === 'jual' ? toko : '', tgl: ambilTgl($('#krTgl'))}, (arah === 'masuk' ? 'Stok Masuk ' : 'Jual ') + ukuran);
   kartuSelesai(true, 'Tersimpan, Stok ' + ukuran + ' Jadi ' + (stok + (arah === 'masuk' ? pak : -pak)) + ' Pak');
-  qty.value = '1';
+  qty.value = '1'; aturTgl($('#krTgl'));
 });
 
 // ---------- Pengeluaran ----------
@@ -280,9 +345,10 @@ sekali($('#pgSimpan'), () => {
   if (!toko) return kartuSelesai(false, 'Pilih Toko Dulu');
   if (!desk) return kartuSelesai(false, 'Pilih Jenis Dulu');
   if (!nominal) return kartuSelesai(false, 'Isi Nominal Dulu');
-  antre('simpan', {jenis: 'pengeluaran', toko, desk, nominal, status, ket: $('#pgKet').value.trim().slice(0, 120)}, 'Pengeluaran ' + toko);
+  if (cekTgl($('#pgTgl'))) return kartuSelesai(false, cekTgl($('#pgTgl')));
+  antre('simpan', {jenis: 'pengeluaran', toko, desk, nominal, status, ket: $('#pgKet').value.trim().slice(0, 120), tgl: ambilTgl($('#pgTgl'))}, 'Pengeluaran ' + toko);
   kartuSelesai(true, 'Tersimpan Di HP: ' + toko + ' · ' + desk + ' ' + rp(nominal));
-  $('#pgNom').value = ''; $('#pgKet').value = '';
+  $('#pgNom').value = ''; $('#pgKet').value = ''; aturTgl($('#pgTgl'));
 });
 chipsPilih($('#pgTab'), v => { const riw = $('#s-peng .riw'); $('#pgBelum').hidden = v !== 'belum'; riw.hidden = v === 'belum'; if (v !== 'belum') muatRiwayat(riw, v); });
 
@@ -292,9 +358,10 @@ sekali($('#prSimpan'), () => {
   const sub = dipilih($('#prSub')), desk = $('#prDesk').value.trim(), nominal = nilaiRp($('#prNom'));
   if (!desk) return kartuSelesai(false, 'Isi Deskripsi Dulu');
   if (!nominal) return kartuSelesai(false, 'Isi Nominal Dulu');
-  antre('simpan', {jenis: 'pribadi', sub, desk: desk.slice(0, 60), nominal}, 'Pribadi ' + sub);
+  if (cekTgl($('#prTgl'))) return kartuSelesai(false, cekTgl($('#prTgl')));
+  antre('simpan', {jenis: 'pribadi', sub, desk: desk.slice(0, 60), nominal, tgl: ambilTgl($('#prTgl'))}, 'Pribadi ' + sub);
   kartuSelesai(true, 'Tersimpan Di HP: ' + sub + ' · ' + desk + ' ' + rp(nominal));
-  $('#prDesk').value = ''; $('#prNom').value = ''; muatRiwayat($('#s-prib .riw'));
+  $('#prDesk').value = ''; $('#prNom').value = ''; aturTgl($('#prTgl')); muatRiwayat($('#s-prib .riw'));
 });
 
 // ---------- Riwayat per bulan (laci): hanya bulan yang dipilih yang dibaca ----------
@@ -321,7 +388,7 @@ async function muatRiwayat(wadah, mode) {
     const ls = rows.filter(x => x.jenis === 'pengeluaran' && x.status === 'lunas');
     return isi(wadah, kepala, ls.length ? ls.map(kartuLunas) : [h('div', {cls: 'card kosong'}, 'Belum Ada Yang Lunas Di Bulan Ini')]);
   }
-  const pend = S.q.filter(x => x.aksi === 'simpan' && x.data.jenis === jenis && ym === ymNow() && (jenis !== 'pribadi' || x.data.sub === dipilih($('#prSub')))).reverse().map(it => barisData(Object.assign({waktu: it.t}, it.data), it.st === 'gagal' ? 'Gagal Terkirim' : 'Menunggu Kirim'));
+  const pend = S.q.filter(x => x.aksi === 'simpan' && x.data.jenis === jenis && ym === (x.data.tgl ? x.data.tgl.slice(0, 7) : ymNow()) && (jenis !== 'pribadi' || x.data.sub === dipilih($('#prSub')))).reverse().map(it => barisData(Object.assign({waktu: it.data.tgl ? it.data.tgl + 'T05:00:00Z' : it.t}, it.data), it.st === 'gagal' ? 'Gagal Terkirim' : 'Menunggu Kirim'));
   const list = pend.concat(rows.slice(0, 300).map(x => barisData(x, '', true)));
   isi(wadah, kepala, h('div', {cls: 'card'}, list.length ? list : [h('div', {cls: 'kosong'}, 'Belum Ada Catatan Di Bulan Ini')]));
 }
@@ -456,11 +523,31 @@ $('#avatar').onclick = async () => {
   keluarLokal();
 };
 
+// ---------- segarkan otomatis (tanpa tombol refresh) ----------
+// Saat jendela dibuka lagi, dan tiap 1 menit selama jendela dilihat: ambil ringkasan + riwayat layar ini.
+let terakhirSegar = Date.now(), lagiSegar = false;
+async function segarkan() {
+  if (!S.tok || lagiSegar || document.hidden || $('#app').hidden || S.q.some(x => x.st !== 'gagal')) return;
+  if (Date.now() - terakhirSegar < 20000) return;
+  lagiSegar = true; terakhirSegar = Date.now();
+  try {
+    await muatRing();
+    const w = ['kresek', 'peng', 'prib'].includes(S.layar) ? $('#s-' + S.layar + ' .riw') : null;
+    if (w && !w.hidden && !$('#dlgEdit').open) { // ambil diam-diam, baru ganti tampilan (tanpa kedip loading)
+      const ym = w.dataset.ym || ymNow(), r = await api('riwayat', {bulan: ym, jenis: w.dataset.jenis}, 'Segarkan Riwayat');
+      if (r.ok) { S.riw[ym + '|' + w.dataset.jenis] = {t: Date.now(), rows: r.data}; muatRiwayat(w); }
+    }
+  } finally { lagiSegar = false; }
+}
+document.addEventListener('visibilitychange', segarkan);
+addEventListener('focus', segarkan);
+setInterval(segarkan, 60000);
+
 // ---------- mulai ----------
 function sapaan() { const j = +new Date().toLocaleString('en-US', {hour: 'numeric', hour12: false, timeZone: 'Asia/Jakarta'}); return (j < 11 ? 'Selamat Pagi' : j < 15 ? 'Selamat Siang' : j < 18 ? 'Selamat Sore' : 'Selamat Malam') + ', ' + LS.get('nama', 'Kapten') + '!'; }
 async function mulai() {
   $('#login').hidden = true; $('#login video').pause(); $('#app').hidden = false;
-  $('#sapa').textContent = sapaan(); tampilMaster(); tampil(); buka('home', true);
+  $('#sapa').textContent = sapaan(); $$('.tgl').forEach(el => aturTgl(el)); tampilMaster(); tampil(); buka('home', true);
   history.replaceState({s: 'home'}, '');
   if (!S.ring) kartu('Sedang Mengambil Data Awal…');
   const r = await api('awal', {}, 'Muat Data Awal');
