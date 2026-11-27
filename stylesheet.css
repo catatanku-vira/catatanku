@@ -75,7 +75,10 @@ button.row{cursor:pointer}.row img{width:32px;flex:none}.row .t{flex:1;min-width
 .pen{position:absolute;right:8px;top:6px;width:36px;height:36px;border-radius:50%;background:#FAEEDA;border:2px solid var(--emas);color:var(--merah);font-size:17px;font-weight:900;display:grid;place-items:center;z-index:2}
 .pen.kecil{position:static;width:30px;height:30px;font-size:14px;flex:none}
 select{width:100%;min-height:44px;border:2px solid #e0b866;border-radius:12px;padding:8px 10px;background:#fff;font:inherit;font-weight:800;color:inherit}
-input[type=date]{text-transform:none}input:disabled{background:#f1ece2;color:#9a8a70}
+input[type=date]{text-transform:none;-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:100%;min-width:0;text-align:left;line-height:24px}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
+.edJ:focus{outline:none}
+#edForm>*{max-width:100%}input:disabled{background:#f1ece2;color:#9a8a70}
 #dlgEdit{max-width:400px;max-height:90vh;overflow:auto}.edJ{display:block;color:var(--merah);font-size:17px}
 .btn.hapus{background:#fff;color:var(--merah2);border-color:var(--merah2)}
 .lunasK{position:relative;overflow:hidden}

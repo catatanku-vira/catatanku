@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.6'
+  VERSI: '1.7'
 };
 // ===============================================================
 
@@ -239,7 +239,7 @@ function bukaEdit(o) {
   const d = $('#dlgEdit'), f = $('#edForm'), tgl = h('input', {type: 'date', 'aria-label': 'Tanggal'}); aturTgl(tgl, keTgl(o.waktu));
   const pilihan = (list, nilai) => h('select', {}, [...new Set([nilai, ...list].filter(Boolean))].map(x => h('option', {value: x, selected: x === nilai ? '' : null}, x)));
   const terbayar = o.jenis === 'pengeluaran' && (o.status === 'lunas' || (o.sisa !== '' && o.sisa != null && Number(o.sisa) !== Number(o.nominal)));
-  const isian = {}, el = [h('b', {cls: 'edJ'}, 'Edit Catatan'), h('div', {cls: 'lb'}, 'Tanggal'), tgl];
+  const isian = {}, el = [h('b', {cls: 'edJ', tabindex: '-1'}, 'Edit Catatan'), h('div', {cls: 'lb'}, 'Tanggal'), tgl];
   if (o.jenis === 'kresek') {
     el.push(h('p', {cls: 'info'}, (o.arah === 'masuk' ? 'Stok Masuk' : 'Jual Ke Toko') + ' · Kresek ' + o.ukuran));
     if (o.arah === 'jual') { isian.toko = pilihan(S.master.toko, o.toko); el.push(h('div', {cls: 'lb'}, 'Toko'), isian.toko); }
@@ -280,7 +280,7 @@ function bukaEdit(o) {
   }}, 'Simpan Perubahan');
   const batal = h('button', {cls: 'btn hapus', type: 'button', onclick: () => { d.close(); mintaBatal(o, (o.toko || o.desk || '') + ' ' + (o.jenis === 'kresek' ? ang(o.pak) + ' Pak' : rp(o.nominal))); }}, 'Batalkan Catatan Ini');
   isi(f, el, pesan, h('div', {cls: 'dlgBtn'}, h('button', {cls: 'btn alt', value: '0'}, 'Tutup'), simpan), batal);
-  d.showModal();
+  d.showModal(); f.querySelector('.edJ').focus(); // jangan langsung membuka kalender; tanggal dipilih sendiri bila perlu
 }
 
 // ---------- isian rupiah: kosong saat diketuk, titik ribuan otomatis ----------
