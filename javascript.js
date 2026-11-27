@@ -1,7 +1,7 @@
 // ===== CONFIG (hanya bagian ini yang diganti saat pasang) =====
 const CONFIG = {
-  API: 'PASTE_ALAMAT_EXEC_DI_SINI',
-  CLIENT_ID: 'PASTE_GOOGLE_CLIENT_ID_DI_SINI',
+  API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
+  CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
   VERSI: '1.0'
 };
 // ===============================================================
