@@ -19,7 +19,7 @@
 
 <!-- LOGIN -->
 <section id="login" class="layar" hidden>
-  <video class="vid" src="./img/login.mp4" poster="./img/login.jpg" autoplay muted loop playsinline preload="auto"></video>
+  <video class="vid" id="lgVid" autoplay muted loop playsinline preload="auto"></video>
   <div class="lgGrad"></div>
   <h1 class="lgJudul">Catatanku</h1>
   <div class="lgKotak">
@@ -39,16 +39,19 @@
 
   <main>
     <section id="s-home" class="sc">
-      <div class="hero"><video class="vid" src="./img/login.mp4" poster="./img/login.jpg" autoplay muted loop playsinline preload="metadata"></video><div class="sapa" id="sapa">Selamat Datang</div></div>
+      <div class="hero"><video class="vid" src="./img/login-wide.mp4" poster="./img/login-wide.jpg" autoplay muted loop playsinline preload="metadata"></video><div class="sapa" id="sapa">Selamat Datang</div></div>
+      <div class="kol2"><div>
       <h2 class="sec">Laporan Kapten Hari Ini</h2>
       <div class="card" id="laporan"></div>
       <h2 class="sec">Stok Kresek</h2>
       <div class="g3" id="stokHome"></div>
+      </div><div>
       <h2 class="sec">Catatan Terakhir</h2>
       <div class="card" id="terakhir"></div>
+      </div></div>
     </section>
 
-    <section id="s-kresek" class="sc" hidden>
+    <section id="s-kresek" class="sc" hidden><div class="kol2"><div>
       <div class="g3" id="stokKresek"></div>
       <div class="card mt">
         <div class="big2" id="krArah">
@@ -61,11 +64,11 @@
         <div class="lb">Jumlah Pak</div>
         <div class="qty"><button id="qMin" aria-label="Kurangi">−</button><input id="qty" inputmode="numeric" value="1" aria-label="Jumlah pak"><button id="qPlus" aria-label="Tambah">+</button></div>
         <button class="btn" id="krSimpan">Simpan</button>
-      </div>
-      <div class="riw" data-jenis="kresek"></div>
+      </div></div>
+      <div class="riw" data-jenis="kresek"></div></div>
     </section>
 
-    <section id="s-peng" class="sc" hidden>
+    <section id="s-peng" class="sc" hidden><div class="kol2">
       <div class="card">
         <div class="lb">Toko</div><div class="chips" id="pgToko"></div>
         <div class="lb">Jenis</div><div class="chips" id="pgJenis"></div>
@@ -76,22 +79,22 @@
         <div class="lb">Keterangan (Boleh Kosong)</div>
         <input id="pgKet" maxlength="120" placeholder="Uang Penitipan">
         <button class="btn" id="pgSimpan">Simpan</button>
-      </div>
-      <div class="seg s3" id="pgTab"><button data-v="belum" class="on">Belum Lunas (<span id="nBelum">0</span>)</button><button data-v="lunas">Lunas</button><button data-v="semua">Semua</button></div>
+      </div><div>
+      <div class="seg s3 mt0" id="pgTab"><button data-v="belum" class="on">Belum Lunas (<span id="nBelum">0</span>)</button><button data-v="lunas">Lunas</button><button data-v="semua">Semua</button></div>
       <div id="pgBelum"></div>
-      <div class="riw" data-jenis="pengeluaran" hidden></div>
+      <div class="riw" data-jenis="pengeluaran" hidden></div></div></div>
     </section>
 
-    <section id="s-prib" class="sc" hidden>
-      <div class="seg s2" id="prSub"><button data-v="CV" class="on">CV</button><button data-v="OP">OP</button></div>
+    <section id="s-prib" class="sc" hidden><div class="kol2"><div>
+      <div class="seg s2 mt0" id="prSub"><button data-v="CV" class="on">CV</button><button data-v="OP">OP</button></div>
       <div class="tot"><span>Total <span id="prNama">CV</span><br><span id="prBln"></span></span><b id="prTot">Rp 0</b></div>
       <div class="card">
         <div class="lb">Deskripsi</div><input id="prDesk" maxlength="60" placeholder="ATK CURUG">
         <div class="lb">Nominal</div>
         <div class="rpBox"><input class="rp" id="prNom" inputmode="numeric" placeholder="Ketik Nominal" aria-label="Nominal"><button class="k000" aria-label="Tambah tiga nol">000</button></div>
         <button class="btn" id="prSimpan">Simpan Ke CV</button>
-      </div>
-      <div class="riw" data-jenis="pribadi"></div>
+      </div></div>
+      <div class="riw" data-jenis="pribadi"></div></div>
     </section>
 
     <section id="s-set" class="sc" hidden>
@@ -133,7 +136,7 @@
   <nav class="nav">
     <button data-go="home" class="on"><img src="./img/home.png" alt="">Beranda</button>
     <button data-go="kresek"><img src="./img/kresek.png" alt="">Kresek</button>
-    <button class="plus" id="btnPlus" aria-label="Catat"><img src="./img/plus.png" alt=""></button>
+    <button class="plus" id="btnPlus" aria-label="Catat"><img src="./img/plus.png" alt=""><span class="lbPlus">Catat Baru</span></button>
     <button data-go="peng"><img src="./img/struk.png" alt="">Pengeluaran</button>
     <button data-go="prib"><img src="./img/buku.png" alt="">Pribadi</button>
   </nav>

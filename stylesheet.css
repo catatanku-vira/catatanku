@@ -30,7 +30,7 @@ main{padding:0 12px}
 .sec{font:700 15px 'Cinzel Decorative',serif;color:var(--merah);margin:16px 2px 8px}
 .sub{margin:0 0 6px;font-size:15px}
 .hero{position:relative;height:220px;border-radius:20px;overflow:hidden;border:3px solid var(--emas);background:var(--navy)}
-.hero .vid{object-position:50% 38%}
+.hero .vid{object-position:50% 28%}
 .sapa{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 10px;color:#fff;font:700 16px 'Cinzel Decorative',serif;background:linear-gradient(transparent,#13294Bdd)}
 .card{background:var(--kartu);border:2px solid var(--garis);border-radius:16px;padding:10px 12px;margin-bottom:10px}
 .mt{margin-top:10px}
@@ -98,4 +98,26 @@ main{padding:0 12px}
 dialog{border:3px solid var(--emas);border-radius:20px;background:var(--kartu);color:var(--teks);max-width:340px;width:calc(100% - 32px);padding:16px}
 dialog::backdrop{background:#0008}dialog p{margin:6px 0 10px;font-weight:600;text-transform:none}
 .dlgBtn{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lbPlus{display:none}
+.mt0{margin-top:0}
+.riw .riwHead:first-child{margin-top:14px}
+/* LAPTOP: menu di samping, isi penuh */
+@media (min-width:900px){
+  #app{max-width:none;padding:0 0 24px 230px}
+  .top{padding:14px 28px 10px;z-index:8}
+  main{padding:0 28px;max-width:1400px}
+  .avatar{position:fixed;left:0;top:0;width:230px;height:120px;display:grid;place-items:center;z-index:7}
+  .avatar img{width:84px;height:84px;border-width:3px}
+  .nav{top:0;right:auto;width:230px;height:100vh;padding:130px 14px 20px;grid-template-columns:1fr;align-content:start;gap:6px;border-top:0;border-right:3px solid var(--emas);font-size:14px}
+  .nav button{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;min-height:52px;text-align:left}
+  .nav button.on{background:var(--krem);color:var(--merah)}
+  .nav .plus{order:9;margin-top:12px;background:var(--merah2);border:2px solid var(--emas);color:#fff;justify-content:center}
+  .nav .plus img{width:34px;margin:0;filter:none}.lbPlus{display:inline;font-weight:900}
+  .kol2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 24px;align-items:start}
+  .kol2>.riw .riwHead{margin-top:0}
+  .hero{height:clamp(220px,30vw,340px)}
+  .sheet{align-items:center}.sheetIsi{margin:0 auto;border-radius:24px;border:3px solid var(--emas);max-width:520px}
+  .kartu{left:auto;right:24px;max-width:420px}
+  #s-set,#s-log,#s-arsip,#s-antrean{max-width:760px}
+}
 @media (prefers-reduced-motion:reduce){*{animation-duration:0s!important}}

@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.0'
+  VERSI: '1.1'
 };
 // ===============================================================
 
@@ -383,9 +383,18 @@ $('#lencana').onclick = () => buka('antrean');
 document.addEventListener('visibilitychange', () => $$('video').forEach(v => { if (document.hidden) v.pause(); else if (!v.closest('[hidden]')) v.play().catch(() => {}); }));
 
 // ---------- login / logout ----------
+// video login: tegak (9:16) di HP, lebar (16:9) di laptop
+const layarLebar = matchMedia('(min-width:900px) and (orientation:landscape)');
+function pilihVideoLogin() {
+  const v = $('#lgVid'), f = layarLebar.matches ? 'login-wide' : 'login';
+  if (v.dataset.f === f) return;
+  v.dataset.f = f; v.poster = './img/' + f + '.jpg'; v.src = './img/' + f + '.mp4';
+  if (!$('#login').hidden) v.play().catch(() => {});
+}
+layarLebar.addEventListener('change', pilihVideoLogin);
 function tampilLogin(pesan) {
   $('#app').hidden = true; $('#login').hidden = false; $('#lgPesan').textContent = pesan || '';
-  $('#login video').play().catch(() => {});
+  pilihVideoLogin(); $('#lgVid').play().catch(() => {});
   const pasang = () => {
     if (!window.google || !google.accounts) return setTimeout(pasang, 200);
     google.accounts.id.initialize({client_id: CONFIG.CLIENT_ID, callback: masukGoogle, auto_select: false});
