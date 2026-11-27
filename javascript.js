@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.1'
+  VERSI: '1.2'
 };
 // ===============================================================
 
@@ -156,7 +156,7 @@ function tampil() {
   // laporan kapten
   const lap = [];
   UK.forEach(u => { const w = warnaStok(r.stok[u] || 0, r.min[u] || 0); if (w) lap.push(h('button', {cls: 'row', onclick: () => buka('kresek')}, img(w === 'r' ? 'bell' : 'flag'), h('span', {cls: 't'}, 'Kresek ' + u + ' Tinggal ' + ang(r.stok[u]) + ' Pak'))); });
-  if (r.kasbon.length) lap.push(h('button', {cls: 'row', onclick: () => buka('peng')}, img('jam'), h('span', {cls: 't'}, r.kasbon.length + ' Kasbon Belum Lunas')));
+  if (r.kasbon.length) lap.push(h('button', {cls: 'row', onclick: () => buka('peng')}, img('jam'), h('span', {cls: 't'}, r.kasbon.length + ' Pengeluaran Belum Lunas')));
   if (S.q.some(x => x.st === 'gagal')) lap.push(h('button', {cls: 'row', onclick: () => buka('antrean')}, img('bell'), h('span', {cls: 't'}, 'Ada Catatan Gagal Terkirim')));
   isi($('#laporan'), lap.length ? lap : [h('div', {cls: 'row'}, img('lunas'), h('span', {cls: 't'}, 'Semua Aman, Kapten'))]);
   // catatan terakhir: yang di antrean dulu, lalu dari server
@@ -165,7 +165,7 @@ function tampil() {
   isi($('#terakhir'), ter.length ? ter : [h('div', {cls: 'kosong'}, 'Belum Ada Catatan Bulan Ini')]);
   // kasbon belum lunas
   $('#nBelum').textContent = r.kasbon.length;
-  isi($('#pgBelum'), r.kasbon.length ? r.kasbon.map(kartuKasbon) : [h('div', {cls: 'card kosong'}, 'Tidak Ada Kasbon Belum Lunas')]);
+  isi($('#pgBelum'), r.kasbon.length ? r.kasbon.map(kartuKasbon) : [h('div', {cls: 'card kosong'}, 'Semua Sudah Lunas, Kapten!')]);
   lencana();
 }
 function barisData(o, status) {
@@ -194,6 +194,13 @@ function kartuKasbon(k) {
     h('div', {cls: 'b2'}, h('button', {onclick: () => { box.hidden = !box.hidden; if (!box.hidden) inp.focus(); }}, 'Bayar Sebagian'),
       h('button', {cls: 'ok', onclick: async () => { if (await tanya('Tandai Lunas?', k.toko + ' · ' + k.desk + ', sisa ' + rp(k.sisa) + ' dianggap lunas.', {ok: 'Lunas'})) { antre('lunas', {kasbonId: k.id}, 'Lunas ' + k.toko); kartuSelesai(true, 'Kasbon ' + k.toko + ' Lunas'); } }}, '✓ Lunas')),
     box);
+}
+
+function kartuLunas(x) {
+  const tgl = t => new Date(t).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
+  return h('div', {cls: 'card k lunasK'},
+    h('div', {cls: 'h'}, h('span', {}, x.toko + ' · ' + x.desk), h('span', {}, ang(x.nominal))), h('div', {cls: 'stamp'}, 'LUNAS'),
+    h('div', {cls: 's'}, 'Dicatat ' + tgl(x.waktu) + (x.lunas ? ' · Lunas ' + tgl(x.lunas) : '') + (x.ket ? ' · ' + x.ket : '')));
 }
 
 // ---------- isian rupiah: kosong saat diketuk, titik ribuan otomatis ----------
@@ -229,7 +236,7 @@ function tampilMaster() {
   const kelola = (w, list, tipe) => isi(w, list.map(n => h('button', {cls: 'x', onclick: async () => { if (await tanya('Hapus ' + n + '?', 'Catatan lama tidak ikut terhapus.', {ok: 'Hapus'})) ubahMaster(tipe, n, true); }}, n, h('i', {}, '✕'))));
   kelola($('#setToko'), S.master.toko, 'toko'); kelola($('#setJenis'), S.master.jenis, 'jenis');
 }
-['krToko', 'pgToko', 'pgJenis', 'krUkuran', 'pgStatus'].forEach(id => chipsPilih($('#' + id)));
+['krToko', 'pgToko', 'pgJenis', 'krUkuran'].forEach(id => chipsPilih($('#' + id)));
 chipsPilih($('#krArah'), v => { $('#krTokoBox').hidden = v === 'masuk'; });
 
 // ---------- Kresek ----------
@@ -253,7 +260,7 @@ sekali($('#krSimpan'), () => {
 
 // ---------- Pengeluaran ----------
 sekali($('#pgSimpan'), () => {
-  const toko = dipilih($('#pgToko')), desk = dipilih($('#pgJenis')), nominal = nilaiRp($('#pgNom')), status = dipilih($('#pgStatus'));
+  const toko = dipilih($('#pgToko')), desk = dipilih($('#pgJenis')), nominal = nilaiRp($('#pgNom')), status = 'belum'; // semua pengeluaran mulai Belum Lunas
   if (!toko) return kartuSelesai(false, 'Pilih Toko Dulu');
   if (!desk) return kartuSelesai(false, 'Pilih Jenis Dulu');
   if (!nominal) return kartuSelesai(false, 'Isi Nominal Dulu');
@@ -294,7 +301,10 @@ async function muatRiwayat(wadah, mode) {
     const sub = dipilih($('#prSub')); rows = rows.filter(x => x.sub === sub);
     if (ym === ymNow()) { const tot = rows.reduce((a, x) => a + Number(x.nominal || 0), 0) + S.q.filter(x => x.data.jenis === 'pribadi' && x.data.sub === sub).reduce((a, x) => a + x.data.nominal, 0); $('#prTot').textContent = rp(tot); $('#prBln').textContent = bulanNama(ym); }
   }
-  if (mode === 'lunas') rows = rows.filter(x => x.jenis === 'bayar' ? x.status === 'lunas' : x.status === 'lunas');
+  if (mode === 'lunas') {
+    const ls = rows.filter(x => x.jenis === 'pengeluaran' && x.status === 'lunas');
+    return isi(wadah, kepala, ls.length ? ls.map(kartuLunas) : [h('div', {cls: 'card kosong'}, 'Belum Ada Yang Lunas Di Bulan Ini')]);
+  }
   const pend = S.q.filter(x => x.aksi === 'simpan' && x.data.jenis === jenis && ym === ymNow() && (jenis !== 'pribadi' || x.data.sub === dipilih($('#prSub')))).reverse().map(it => barisData(Object.assign({waktu: it.t}, it.data), it.st === 'gagal' ? 'Gagal Terkirim' : 'Menunggu Kirim'));
   const list = pend.concat(rows.slice(0, 300).map(x => barisData(x)));
   isi(wadah, kepala, h('div', {cls: 'card'}, list.length ? list : [h('div', {cls: 'kosong'}, 'Belum Ada Catatan Di Bulan Ini')]));
