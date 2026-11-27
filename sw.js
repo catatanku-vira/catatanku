@@ -1,5 +1,5 @@
 // Service worker Catatanku: hanya menyimpan file tampilan. Jawaban API TIDAK pernah disimpan.
-const VERSI = 'catatanku-v7';
+const VERSI = 'catatanku-v8';
 const FILE = ['./', './index.html', './stylesheet.css', './javascript.js', './manifest.webmanifest', './icon-192.png', './icon-512.png',
   ...['login.jpg', 'login.mp4', 'login-wide.jpg', 'login-wide.mp4', 'profil.png', 'gear.png', 'happy.png', 'worried.png', 'masuk.png', 'jual.png', 'kresek.png', 'struk.png', 'buku.png', 'plus.png', 'home.png', 'bell.png', 'flag.png', 'jam.png', 'lunas.png', 'chest.png', 'deck.png', 'app.png'].map(f => './img/' + f)];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSI).then(c => c.addAll(FILE)).then(() => self.skipWaiting())); });

@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.5'
+  VERSI: '1.6'
 };
 // ===============================================================
 
@@ -382,7 +382,10 @@ async function muatRiwayat(wadah, mode) {
   let rows = c.rows;
   if (jenis === 'pribadi') {
     const sub = dipilih($('#prSub')); rows = rows.filter(x => x.sub === sub);
-    if (ym === ymNow()) { const tot = rows.reduce((a, x) => a + Number(x.nominal || 0), 0) + S.q.filter(x => x.data.jenis === 'pribadi' && x.data.sub === sub).reduce((a, x) => a + x.data.nominal, 0); $('#prTot').textContent = rp(tot); $('#prBln').textContent = bulanNama(ym); }
+    // total ikut bulan yang dipilih; catatan yang dibatalkan tidak dihitung
+    const tunggu = S.q.filter(x => x.aksi === 'simpan' && x.data.jenis === 'pribadi' && x.data.sub === sub && (x.data.tgl ? x.data.tgl.slice(0, 7) : ymNow()) === ym);
+    const tot = rows.filter(x => x.status !== 'batal').reduce((a, x) => a + Number(x.nominal || 0), 0) + tunggu.reduce((a, x) => a + x.data.nominal, 0);
+    $('#prTot').textContent = rp(tot); $('#prBln').textContent = bulanNama(ym);
   }
   if (mode === 'lunas') {
     const ls = rows.filter(x => x.jenis === 'pengeluaran' && x.status === 'lunas');
@@ -460,6 +463,7 @@ function buka(id, dariRiwayat) {
   $('#judul').textContent = JUDUL[id];
   scrollTo(0, 0);
   $$('.hero video').forEach(v => id === 'home' ? v.play().catch(() => {}) : v.pause());
+  if (id === 'prib' && !dariRiwayat) delete $('#s-prib .riw').dataset.ym; // buka lagi = kembali ke bulan berjalan
   if (id === 'kresek' || id === 'prib') muatRiwayat($('#s-' + id + ' .riw'));
   if (id === 'peng' && dipilih($('#pgTab')) !== 'belum') muatRiwayat($('#s-peng .riw'));
   if (id === 'set') isiMinimal();
