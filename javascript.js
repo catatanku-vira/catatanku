@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.9'
+  VERSI: '1.10'
 };
 // ===============================================================
 
