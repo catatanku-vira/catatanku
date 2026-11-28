@@ -2,7 +2,7 @@
 const CONFIG = {
   API: 'https://script.google.com/macros/s/AKfycbymOvrKqSLhunIBj6cu1mX-2jX5Dtrnk0cwxJsa_9Iv4ei4qvnXkmB9Lhl5Hn3dujit/exec',
   CLIENT_ID: '568227159508-em7vtqrhr81kom8bvelr714veosgforp.apps.googleusercontent.com',
-  VERSI: '1.10'
+  VERSI: '1.11'
 };
 // ===============================================================
 
@@ -296,14 +296,30 @@ $$('.angka').forEach(el => { el.addEventListener('focus', () => el.select()); el
 
 // ---------- pilihan (chips) ----------
 function chipsPilih(wadah, fn) { wadah.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; $$('#' + wadah.id + ' button').forEach(x => x.classList.toggle('on', x === b)); fn && fn(b.dataset.v); }); }
-const dipilih = wadah => { const b = wadah.querySelector('.on'); return b ? b.dataset.v : ''; };
+const dipilih = wadah => { if (wadah.classList.contains('ac')) return wadah.dataset.v || ''; const b = wadah.querySelector('.on'); return b ? b.dataset.v : ''; };
+// kolom ketik + saran (pengganti kotak-kotak pilihan toko/jenis)
 function isiChips(wadah, list, tipe) {
-  const lama = dipilih(wadah);
-  isi(wadah, list.map(n => h('button', {'data-v': n, cls: n === lama ? 'on' : ''}, n)),
-    h('button', {cls: 'add', onclick: async () => {
-      const n = await tanya('Tambah ' + (tipe === 'toko' ? 'Toko' : 'Jenis'), '', {input: 'Nama', ok: 'Tambah'});
-      if (n) await ubahMaster(tipe, n, false);
-    }}, '+ Tambah'));
+  wadah.classList.add('ac');
+  let inp = wadah.querySelector('input'), sg = wadah.querySelector('.sg');
+  if (!inp) {
+    inp = h('input', {type: 'text', placeholder: tipe === 'toko' ? 'Ketik Nama Toko' : 'Ketik Jenis', autocomplete: 'off', 'aria-label': tipe === 'toko' ? 'Toko' : 'Jenis'});
+    sg = h('div', {cls: 'sg', hidden: ''}); isi(wadah, inp, sg);
+    const pilih = v => { inp.value = v; wadah.dataset.v = v; sg.hidden = true; };
+    const saran = () => {
+      const q = inp.value.trim().toUpperCase(), L = wadah._list || [], U = x => String(x).toUpperCase(), sama = L.find(x => U(x) === q);
+      wadah.dataset.v = sama || '';
+      if (!q) { sg.hidden = true; return; }
+      const m = L.filter(x => U(x).includes(q)).sort((a, b) => U(a).indexOf(q) - U(b).indexOf(q)).slice(0, 6);
+      const el = m.map(x => { const k = U(x).indexOf(q); return h('button', {type: 'button', onclick: () => pilih(x)}, x.slice(0, k), h('b', {}, x.slice(k, k + q.length)), x.slice(k + q.length)); });
+      if (!sama) el.push(h('button', {type: 'button', cls: 'baru', onclick: async () => { sg.hidden = true; await ubahMaster(tipe, q, false); const b = (wadah._list || []).find(x => String(x).toUpperCase() === q); if (b) pilih(b); }}, '+ Tambah "' + q + '" Sebagai Baru'));
+      isi(sg, el); sg.hidden = false;
+    };
+    inp.addEventListener('input', saran);
+    inp.addEventListener('focus', () => inp.select());
+    inp.addEventListener('blur', () => setTimeout(() => { sg.hidden = true; }, 200));
+  }
+  wadah._list = list;
+  if (wadah.dataset.v && !list.includes(wadah.dataset.v)) { wadah.dataset.v = ''; inp.value = ''; }
 }
 async function ubahMaster(tipe, nama, hapus) {
   kartu(hapus ? 'Sedang Menghapus…' : 'Sedang Menambah…');
@@ -316,7 +332,7 @@ function tampilMaster() {
   const kelola = (w, list, tipe) => isi(w, list.map(n => h('button', {cls: 'x', onclick: async () => { if (await tanya('Hapus ' + n + '?', 'Catatan lama tidak ikut terhapus.', {ok: 'Hapus'})) ubahMaster(tipe, n, true); }}, n, h('i', {}, '✕'))));
   kelola($('#setToko'), S.master.toko, 'toko'); kelola($('#setJenis'), S.master.jenis, 'jenis');
 }
-['krToko', 'pgToko', 'pgJenis', 'krUkuran'].forEach(id => chipsPilih($('#' + id)));
+chipsPilih($('#krUkuran'));
 chipsPilih($('#krArah'), v => { $('#krTokoBox').hidden = v === 'masuk'; });
 
 // ---------- Kresek ----------
@@ -329,7 +345,7 @@ $('#qPlus').onclick = () => { qty.value = Math.min(99999, (+qty.value || 0) + 1)
 sekali($('#krSimpan'), () => {
   const arah = dipilih($('#krArah')), ukuran = dipilih($('#krUkuran')), toko = dipilih($('#krToko')), pak = +qty.value || 0;
   if (!ukuran) return kartuSelesai(false, 'Pilih Ukuran Dulu');
-  if (arah === 'jual' && !toko) return kartuSelesai(false, 'Pilih Toko Dulu');
+  if (arah === 'jual' && !toko) return kartuSelesai(false, 'Pilih Toko Dari Saran Dulu');
   if (pak < 1) return kartuSelesai(false, 'Jumlah Pak Minimal 1');
   if (cekTgl($('#krTgl'))) return kartuSelesai(false, cekTgl($('#krTgl')));
   const stok = efektif().stok[ukuran] || 0;
@@ -342,8 +358,8 @@ sekali($('#krSimpan'), () => {
 // ---------- Pengeluaran ----------
 sekali($('#pgSimpan'), () => {
   const toko = dipilih($('#pgToko')), desk = dipilih($('#pgJenis')), nominal = nilaiRp($('#pgNom')), status = 'belum'; // semua pengeluaran mulai Belum Lunas
-  if (!toko) return kartuSelesai(false, 'Pilih Toko Dulu');
-  if (!desk) return kartuSelesai(false, 'Pilih Jenis Dulu');
+  if (!toko) return kartuSelesai(false, 'Pilih Toko Dari Saran Dulu');
+  if (!desk) return kartuSelesai(false, 'Pilih Jenis Dari Saran Dulu');
   if (!nominal) return kartuSelesai(false, 'Isi Nominal Dulu');
   if (cekTgl($('#pgTgl'))) return kartuSelesai(false, cekTgl($('#pgTgl')));
   antre('simpan', {jenis: 'pengeluaran', toko, desk, nominal, status, ket: $('#pgKet').value.trim().slice(0, 120), tgl: ambilTgl($('#pgTgl'))}, 'Pengeluaran ' + toko);

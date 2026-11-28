@@ -136,3 +136,4 @@ dialog::backdrop{background:#0008}dialog p{margin:6px 0 10px;font-weight:600;tex
   #s-set,#s-log,#s-arsip,#s-antrean{max-width:760px}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:0s!important}}
+.chips.ac{display:block;position:relative}.ac input{text-transform:uppercase}.ac .sg{background:#fff;border:2px solid #e0b866;border-radius:12px;margin-top:4px;overflow:hidden}.ac .sg button{display:block;width:100%;text-align:left;min-height:44px;padding:10px 12px;border:0;border-bottom:1px dashed #f0dcb0;background:#fff;font-weight:700}.ac .sg button:last-child{border-bottom:0}.ac .sg b{color:var(--merah)}.ac .sg .baru{color:var(--coklat);font-style:italic}
